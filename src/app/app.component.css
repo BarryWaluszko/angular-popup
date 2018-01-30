@@ -1,0 +1,11 @@
+.wrapper {
+    display: grid;
+    grid-template-columns: 100px 100px 100px;
+    grid-gap: 10px;
+}
+  
+.box {
+    border-radius: 5px;
+    padding: 20px;
+    font-size: 150%;
+}
