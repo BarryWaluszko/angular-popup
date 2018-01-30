@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ViewContainerRef, Renderer2, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ViewContainerRef, Renderer2, ElementRef, ViewChild, HostListener } from '@angular/core';
 
 @Component({
   selector: 'app-popup',
@@ -8,14 +8,31 @@ import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ViewContaine
 export class PopupComponent implements OnDestroy, OnInit {
 
   // listenFunc will hold the function returned by "renderer.listen"
-  listenFunc: Function;
+  private _listenFunc = [];
+  private _draggableElem;
+  private isMouseDown: Boolean = false;
 
-  // @HostListener('window:keydown', ['$event'])
-  // onKeyDown(event: KeyboardEvent) {
-  //   console.log(event);
-  //   if (event.keyCode == 27) //on a keyboard ESC key was pressed
-  //     this.closeMe();
-  // }
+  //@HostListener('mousedown', ['$event'])
+  onMouseDown(event) {
+    if (event.srcElement.id == "header") {
+      this.isMouseDown = event.buttons === 1;
+    } else
+      this.isMouseDown = false;
+  }
+
+  //@HostListener('mouseup', ['$event'])
+  onMouseUp(event) {
+    this.isMouseDown = false;
+  }
+
+  //@HostListener('mousemove', ['$event'])
+  onMouseMove(event: MouseEvent) {
+    if (this.isMouseDown ) {
+      this.renderer.setStyle(this._draggableElem, 'top', (event.pageY - 15) + 'px');
+      this.renderer.setStyle(this._draggableElem, 'left', (event.pageX - 150) + 'px');
+    } else
+      this.isMouseDown = false;
+  }
 
   @Input()
   public counter: number = 0;
@@ -32,25 +49,28 @@ export class PopupComponent implements OnDestroy, OnInit {
   constructor(private _viewContainerRef: ViewContainerRef, private renderer: Renderer2, private el: ElementRef) {
     // We cache the function "listen" returns
     //target can be: 'window'|'document'|'body'
-    this.listenFunc = this.renderer.listen('body', 'keydown', (event: KeyboardEvent) => {
+    this._listenFunc.push(this.renderer.listen('body', 'keydown', (event: KeyboardEvent) => {
       if (event.keyCode == 27) {//on a keyboard ESC was pressed
         event.stopPropagation();
         this.closeMe();
       }
-    });
+    }));
   }
 
   ngOnInit() {
     //Called after the constructor, initializing input properties, and the first call to ngOnChanges.
     //Add 'implements OnInit' to the class.
-    this.renderer.setStyle(this.el.nativeElement.firstChild, 'top', this.y + 'px');
-    this.renderer.setStyle(this.el.nativeElement.firstChild, 'left', this.x + 'px');
+    this._draggableElem = this.el.nativeElement.firstChild;
+    this.renderer.setStyle(this._draggableElem, 'top', this.y + 'px');
+    this.renderer.setStyle(this._draggableElem, 'left', this.x + 'px');
   }
 
   ngOnDestroy() {
-    //this will not be automatically executed when 'removeChild()' method is fired. 'removeChild()' is inside 'closeMe()' method. 
+    //this will NOT be automatically executed when 'removeChild()' method is fired. 'removeChild()' is inside 'closeMe()' method. 
     //So 'ngOnDestroy' must be executed maually!
-    this.listenFunc();
+    this._listenFunc.forEach(fn => { //remove all listeners
+      fn();
+    });
   }
 
   closeMe() {

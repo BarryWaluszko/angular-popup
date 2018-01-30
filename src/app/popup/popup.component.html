@@ -1,6 +1,6 @@
 <div class="popup">
   <div class="popup-content">
-    <div class="popup-header">
+    <div #header id="header" (mousedown)="onMouseDown($event)" (mouseup)="onMouseUp($event)" (mousemove)="onMouseMove($event)" class="popup-header">
       <a class="close" href="#" (click)="closeMe();">[close]</a>
     </div>
     <div class="popup-body">
